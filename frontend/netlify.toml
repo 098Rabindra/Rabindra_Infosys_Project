@@ -1,0 +1,19 @@
+# Netlify Configuration for SecureVault React Frontend
+
+[build]
+  base = "frontend"
+  publish = "dist"
+  command = "npm run build"
+
+# Proxy /api/* requests to Render Spring Boot Backend
+[[redirects]]
+  from = "/api/*"
+  to = "https://password-vault-backend.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# Single Page Application (SPA) Client-Side Routing Fallback
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "checkJs": false,
+    "noImplicitAny": false,
+    "allowJs": true
+  },
+  "exclude": ["node_modules", "dist"]
+}

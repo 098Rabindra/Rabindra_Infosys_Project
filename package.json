@@ -1,0 +1,13 @@
+{
+  "name": "password-vault-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npm --prefix frontend run dev",
+    "build": "npm --prefix frontend run build",
+    "preview": "npm --prefix frontend run preview",
+    "backend:dev": "mvnw spring-boot:run",
+    "backend:h2": "mvnw spring-boot:run -Dspring-boot.run.profiles=h2",
+    "backend": "java -Dspring.profiles.active=postgres -jar target/password-vault-backend-1.0.0-SNAPSHOT.jar"
+  }
+}

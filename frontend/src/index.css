@@ -1,0 +1,365 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-heading: 'Outfit', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --bg-dark: #030712;
+  --bg-card: rgba(10, 15, 30, 0.45);
+  --bg-card-hover: rgba(15, 23, 42, 0.6);
+
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-cyan: #06b6d4;
+  --accent-emerald: #10b981;
+  --accent-rose: #f43f5e;
+  --accent-amber: #f59e0b;
+
+  --border-subtle: rgba(255, 255, 255, 0.05);
+  --border-glow: rgba(99, 102, 241, 0.2);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(6, 182, 212, 0.06) 0px, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(3, 7, 18, 1) 0px, transparent 100%);
+  background-attachment: fixed;
+  color: #f1f5f9;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+code, .font-mono {
+  font-family: var(--font-mono);
+}
+
+@layer components {
+  /* Custom Glassmorphism UI components */
+  .glass-panel {
+    background: var(--bg-card);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    box-shadow: 
+      0 4px 30px rgba(0, 0, 0, 0.4),
+      inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .glass-panel:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--bg-card-hover);
+    box-shadow: 
+      0 10px 40px rgba(0, 0, 0, 0.6),
+      inset 0 1px 1px rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-input {
+    background: rgba(3, 7, 18, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    color: #f8fafc;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    width: 100%;
+  }
+
+  .glass-input:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 
+      0 0 0 3px rgba(99, 102, 241, 0.15),
+      0 0 20px rgba(99, 102, 241, 0.1);
+    background: rgba(3, 7, 18, 0.8);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent-primary) 0%, #4f46e5 100%);
+    color: #ffffff;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 
+      0 6px 20px rgba(99, 102, 241, 0.4),
+      0 0 12px rgba(99, 102, 241, 0.2);
+    background: linear-gradient(135deg, #818cf8 0%, #4f46e5 100%);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    color: #cbd5e1;
+    font-weight: 500;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #ffffff;
+  }
+
+  .badge {
+    padding: 0.25rem 0.65rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.025em;
+    text-transform: uppercase;
+  }
+
+  .badge-login { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.25); }
+  .badge-card { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border: 1px solid rgba(16, 185, 129, 0.25); }
+  .badge-note { background: rgba(245, 158, 11, 0.15); color: #fde047; border: 1px solid rgba(245, 158, 11, 0.25); }
+  .badge-identity { background: rgba(6, 182, 212, 0.15); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.25); }
+
+  .glass-modal {
+    background-color: #0b0f19 !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 20px;
+    box-shadow: 
+      0 25px 60px rgba(0, 0, 0, 0.85),
+      0 0 40px rgba(99, 102, 241, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Scrollbar customization */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(3, 7, 18, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ─── SweetAlert2 Vault Theme ─────────────────────────────────────────────── */
+.swal-vault-popup {
+  border-radius: 20px !important;
+  border: 1px solid rgba(99, 102, 241, 0.25) !important;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99,102,241,0.1) !important;
+  padding: 2rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+.swal-vault-title {
+  font-family: var(--font-heading) !important;
+  font-weight: 700 !important;
+  font-size: 1.35rem !important;
+  letter-spacing: -0.01em !important;
+  color: #f1f5f9 !important;
+}
+
+.swal-vault-btn {
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  padding: 0.6rem 1.5rem !important;
+  letter-spacing: 0.01em !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.swal-vault-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
+}
+
+.swal2-timer-progress-bar {
+  background: linear-gradient(90deg, #6366f1, #06b6d4) !important;
+}
+
+.swal2-success-ring {
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+/* ─── Yellow & Blue Animated Border for SweetAlert Modal ────────────────── */
+@keyframes borderGlowYellowBlue {
+  0% {
+    border-color: #facc15 !important;
+    box-shadow: 0 0 30px rgba(250, 204, 21, 0.45), inset 0 0 15px rgba(250, 204, 21, 0.15) !important;
+  }
+  50% {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.45), inset 0 0 15px rgba(59, 130, 246, 0.15) !important;
+  }
+  100% {
+    border-color: #facc15 !important;
+    box-shadow: 0 0 30px rgba(250, 204, 21, 0.45), inset 0 0 15px rgba(250, 204, 21, 0.15) !important;
+  }
+}
+
+.swal-animated-border {
+  border: 2.5px solid #facc15 !important;
+  border-radius: 20px !important;
+  animation: borderGlowYellowBlue 2.5s infinite ease-in-out !important;
+}
+
+/* ─── Logout Buttons: Blue Yes, Red No ───────────────────────────────────── */
+.swal2-styled.swal-logout-yes-btn,
+.swal-logout-yes-btn {
+  background-color: #2563eb !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  padding: 0.65rem 1.85rem !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45) !important;
+  margin: 0.4rem !important;
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.swal2-styled.swal-logout-yes-btn:hover,
+.swal-logout-yes-btn:hover {
+  background: linear-gradient(135deg, #60a5fa 0%, #2563eb 100%) !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.65) !important;
+  transform: translateY(-1px) !important;
+}
+
+.swal2-styled.swal-logout-no-btn,
+.swal-logout-no-btn {
+  background-color: #dc2626 !important;
+  background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%) !important;
+  color: #ffffff !important;
+  border-radius: 10px !important;
+  padding: 0.65rem 1.85rem !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.45) !important;
+  margin: 0.4rem !important;
+  cursor: pointer !important;
+  outline: none !important;
+}
+
+.swal2-styled.swal-logout-no-btn:hover,
+.swal-logout-no-btn:hover {
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%) !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.65) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ─── Blue Glow Animated Card & Hover Effects ───────────────────────────── */
+@keyframes blueGlowPulse {
+  0% {
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.12);
+  }
+  50% {
+    border-color: rgba(99, 102, 241, 0.75);
+    box-shadow: 0 0 45px rgba(99, 102, 241, 0.55), inset 0 0 20px rgba(99, 102, 241, 0.22);
+  }
+  100% {
+    border-color: rgba(59, 130, 246, 0.45);
+    box-shadow: 0 0 25px rgba(59, 130, 246, 0.3), inset 0 0 15px rgba(59, 130, 246, 0.12);
+  }
+}
+
+.blue-animated-card {
+  border: 1.5px solid rgba(59, 130, 246, 0.45);
+  animation: blueGlowPulse 3.5s infinite ease-in-out;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.blue-animated-card:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 55px rgba(59, 130, 246, 0.7), inset 0 0 25px rgba(59, 130, 246, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+/* ─── White Glow Animated Modal Card ─────────────────────────────────────── */
+@keyframes whiteGlowPulse {
+  0% {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.08);
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 0 45px rgba(255, 255, 255, 0.5), inset 0 0 25px rgba(255, 255, 255, 0.18);
+  }
+  100% {
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.25), inset 0 0 15px rgba(255, 255, 255, 0.08);
+  }
+}
+
+.white-animated-modal {
+  border: 1.5px solid rgba(255, 255, 255, 0.4) !important;
+  animation: whiteGlowPulse 3s infinite ease-in-out !important;
+}
+
+

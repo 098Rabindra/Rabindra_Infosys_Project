@@ -1,0 +1,58 @@
+services:
+  # PostgreSQL Database Container
+  postgres:
+    image: postgres:15-alpine
+    container_name: password-vault-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-password_vault}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tiger}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-password_vault}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot Backend Service Container
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: password-vault-backend
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: postgres
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-password_vault}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-tiger}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-9a2f8c4e6b1d3a5f7e8d0c2b4a6f8e1d3c5b7a9f0e2d4c6b8a0f2e4d6c8b0a2f}
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-smtp.gmail.com}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-465}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-drajapreinsta@gmail.com}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-dzvxyjvoaumymibj}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # React Frontend + Nginx Web Server Container
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: password-vault-frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local

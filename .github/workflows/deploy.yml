@@ -1,0 +1,104 @@
+name: SecureVault CI/CD Pipeline & Cloud Deployment
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # -----------------------------------------------------------
+  # Job 1: Build & Test Backend and Frontend
+  # -----------------------------------------------------------
+  build-and-test:
+    name: Build & Test Applications
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Backend Build & Unit Tests
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build & Test Backend (Maven)
+        run: |
+          mvn clean package -B
+
+      # Frontend Build
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Frontend Dependencies & Build
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+  # -----------------------------------------------------------
+  # Job 2: Build Docker Containers
+  # -----------------------------------------------------------
+  docker-build:
+    name: Build & Validate Docker Containers
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Backend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          tags: securevault-backend:latest
+
+      - name: Build Frontend Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: securevault-frontend:latest
+
+  # -----------------------------------------------------------
+  # Job 3: Automated Cloud Deployment (Optional Trigger)
+  # -----------------------------------------------------------
+  deploy-cloud:
+    name: Deploy to Cloud (AWS / Azure)
+    needs: docker-build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH to Cloud VM (AWS EC2 / Azure VM)
+        if: ${{ secrets.CLOUD_SERVER_IP != '' }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.CLOUD_SERVER_IP }}
+          username: ${{ secrets.CLOUD_SERVER_USER }}
+          key: ${{ secrets.CLOUD_SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/password_vault || git clone ${{ github.repositoryUrl }} /opt/password_vault
+            cd /opt/password_vault
+            git pull origin main
+            docker compose down
+            docker compose up --build -d
+            docker system prune -f
