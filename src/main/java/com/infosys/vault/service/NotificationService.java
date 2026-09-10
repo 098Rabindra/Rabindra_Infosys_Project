@@ -39,11 +39,6 @@ public class NotificationService {
     @Value("${spring.mail.username:drajapreinsta@gmail.com}")
     private String mailFrom;
 
-    @Value("${RESEND_API_KEY:${app.resend.api-key:}}")
-    private String resendApiKey;
-
-    @Value("${BREVO_API_KEY:}")
-    private String brevoApiKey;
 
     public NotificationService(NotificationRepository notificationRepository,
                                UserRepository userRepository,
@@ -258,159 +253,18 @@ public class NotificationService {
 
         String subject = title + " - SecureVault";
 
-        // 1. Try Resend HTTP API
-        if (resendApiKey != null && !resendApiKey.isBlank()) {
-            try {
-                sendViaResendHttpApi(recipientEmail, subject, htmlContent);
-                LOGGER.log(Level.INFO, "Notification Email delivered via Resend HTTP API to: {0}", recipientEmail);
-                return;
-            } catch (Exception e) {
-                LOGGER.log(Level.INFO, "Resend HTTP API note for [{0}]: {1}", new Object[]{recipientEmail, e.getMessage()});
-                if (e.getMessage() != null && (e.getMessage().contains("403") || e.getMessage().contains("testing emails"))) {
-                    return; // In-app notification created successfully, return without SMTP timeout hang
-                }
-            }
-        }
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        // 2. Try Brevo HTTP API
-        if (brevoApiKey != null && !brevoApiKey.isBlank()) {
-            try {
-                sendViaBrevoHttpApi(recipientEmail, subject, htmlContent);
-                LOGGER.log(Level.INFO, "Notification Email delivered via Brevo HTTP API to: {0}", recipientEmail);
-                return;
-            } catch (Exception e) {
-                LOGGER.log(Level.WARNING, "Brevo HTTP API failed: {0}. Falling back to standard SMTP...", e.getMessage());
-            }
-        }
-
-        // 3. Standard SMTP Fallback
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-        helper.setFrom(mailFrom, "SecureVault Notifications");
-        helper.setTo(recipientEmail);
-        helper.setSubject(subject);
-        helper.setText(htmlContent, true);
-        mailSender.send(message);
-        LOGGER.log(Level.INFO, "Notification Email delivered via SMTP to: {0}", recipientEmail);
-    }
-
-    private String escapeJson(String raw) {
-        if (raw == null) return "";
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < raw.length(); i++) {
-            char c = raw.charAt(i);
-            switch (c) {
-                case '"':
-                    sb.append("\\\"");
-                    break;
-                case '\\':
-                    sb.append("\\\\");
-                    break;
-                case '\b':
-                    sb.append("\\b");
-                    break;
-                case '\f':
-                    sb.append("\\f");
-                    break;
-                case '\n':
-                    sb.append("\\n");
-                    break;
-                case '\r':
-                    sb.append("\\r");
-                    break;
-                case '\t':
-                    sb.append("\\t");
-                    break;
-                default:
-                    if (c < ' ') {
-                        sb.append(String.format("\\u%04x", (int) c));
-                    } else {
-                        sb.append(c);
-                    }
-                    break;
-            }
-        }
-        return sb.toString();
-    }
-
-    private void sendViaResendHttpApi(String recipientEmail, String subject, String htmlBody) throws Exception {
-        String targetEmail = recipientEmail != null ? recipientEmail.trim() : "";
-        String ownerEmail = "dakuarabindra2001@gmail.com";
-
-        // In Resend free testing tier (from: onboarding@resend.dev), only sending to owner email is allowed.
-        // If target is not ownerEmail, we target ownerEmail directly with subject indicating original recipient.
-        boolean isTestingModeRecipientMismatch = !targetEmail.equalsIgnoreCase(ownerEmail);
-        String actualRecipient = isTestingModeRecipientMismatch ? ownerEmail : targetEmail;
-        String actualSubject = isTestingModeRecipientMismatch ? "[Testing Mode - Notification for " + targetEmail + "] " + subject : subject;
-
-        String jsonPayload = String.format(
-                "{\"from\":\"SecureVault <onboarding@resend.dev>\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
-                actualRecipient,
-                escapeJson(actualSubject),
-                escapeJson(htmlBody)
-        );
-
-        java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
-        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                .uri(java.net.URI.create("https://api.resend.com/emails"))
-                .header("Authorization", "Bearer " + resendApiKey.trim())
-                .header("Content-Type", "application/json")
-                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload))
-                .build();
-
-        java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 400) {
-            String errBody = response.body() != null ? response.body() : "";
-            if (response.statusCode() == 403 && !actualRecipient.equalsIgnoreCase(ownerEmail)) {
-                String fallbackPayload = String.format(
-                        "{\"from\":\"SecureVault <onboarding@resend.dev>\",\"to\":[\"%s\"],\"subject\":\"%s\",\"html\":\"%s\"}",
-                        ownerEmail,
-                        escapeJson("[Testing Mode - Notification for " + targetEmail + "] " + subject),
-                        escapeJson(htmlBody)
-                );
-                java.net.http.HttpRequest fallbackReq = java.net.http.HttpRequest.newBuilder()
-                        .uri(java.net.URI.create("https://api.resend.com/emails"))
-                        .header("Authorization", "Bearer " + resendApiKey.trim())
-                        .header("Content-Type", "application/json")
-                        .POST(java.net.http.HttpRequest.BodyPublishers.ofString(fallbackPayload))
-                        .build();
-                java.net.http.HttpResponse<String> fallbackResp = client.send(fallbackReq, java.net.http.HttpResponse.BodyHandlers.ofString());
-                if (fallbackResp.statusCode() < 400) {
-                    LOGGER.log(Level.INFO, "Notification email routed to owner email ({0}) for recipient: {1}", new Object[]{ownerEmail, targetEmail});
-                    return;
-                }
-            }
-            throw new RuntimeException("HTTP " + response.statusCode() + ": " + errBody);
-        }
-
-        if (isTestingModeRecipientMismatch) {
-            LOGGER.log(Level.INFO, "Resend Test Mode: Notification Email for [{0}] successfully delivered to owner [{1}].", new Object[]{targetEmail, ownerEmail});
-        } else {
-            LOGGER.log(Level.INFO, "Notification Email delivered via Resend HTTP API to: {0}", targetEmail);
-        }
-    }
-
-    private void sendViaBrevoHttpApi(String recipientEmail, String subject, String htmlBody) throws Exception {
-        String jsonPayload = String.format(
-                "{\"sender\":{\"name\":\"SecureVault\",\"email\":\"%s\"},\"to\":[{\"email\":\"%s\"}],\"subject\":\"%s\",\"htmlContent\":\"%s\"}",
-                mailFrom,
-                recipientEmail,
-                escapeJson(subject),
-                escapeJson(htmlBody)
-        );
-
-        java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
-        java.net.http.HttpRequest request = java.net.http.HttpRequest.newBuilder()
-                .uri(java.net.URI.create("https://api.brevo.com/v3/smtp/email"))
-                .header("api-key", brevoApiKey.trim())
-                .header("Content-Type", "application/json")
-                .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonPayload))
-                .build();
-
-        java.net.http.HttpResponse<String> response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
-        if (response.statusCode() >= 400) {
-            throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
+            helper.setFrom(mailFrom, "SecureVault Notifications");
+            helper.setTo(recipientEmail);
+            helper.setSubject(subject);
+            helper.setText(htmlContent, true);
+            mailSender.send(message);
+            LOGGER.log(Level.INFO, "Notification Email delivered via SMTP to: {0}", recipientEmail);
+        } catch (Exception e) {
+            LOGGER.log(Level.WARNING, "SMTP notification delivery note for [{0}]: {1}", new Object[]{recipientEmail, e.getMessage()});
         }
     }
 
