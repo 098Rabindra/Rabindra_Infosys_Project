@@ -2,7 +2,8 @@
  * API Fetch Client Wrapper
  */
 
-const API_BASE_URL = '/api';
+const RAW_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL = RAW_BASE_URL ? `${RAW_BASE_URL.replace(/\/$/, '')}/api` : '/api';
 
 export async function apiRequest(endpoint, method = 'GET', body = null, token = null) {
   const headers = {
