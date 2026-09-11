@@ -1,9 +1,12 @@
 package com.infosys.vault.service;
 
 import com.infosys.vault.model.Notification;
+import com.infosys.vault.model.PermissionLevel;
+import com.infosys.vault.model.SecurityAlert;
 import com.infosys.vault.model.User;
 import com.infosys.vault.model.VaultItem;
 import com.infosys.vault.repository.NotificationRepository;
+import com.infosys.vault.repository.SecurityAlertRepository;
 import com.infosys.vault.repository.UserRepository;
 import com.infosys.vault.repository.VaultItemRepository;
 import com.infosys.vault.util.PasswordStrengthAnalyzer;
@@ -33,7 +36,7 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
     private final VaultItemRepository vaultItemRepository;
-    private final com.infosys.vault.repository.SecurityAlertRepository securityAlertRepository;
+    private final SecurityAlertRepository securityAlertRepository;
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username:drajapreinsta@gmail.com}")
@@ -43,7 +46,7 @@ public class NotificationService {
     public NotificationService(NotificationRepository notificationRepository,
                                UserRepository userRepository,
                                VaultItemRepository vaultItemRepository,
-                               com.infosys.vault.repository.SecurityAlertRepository securityAlertRepository,
+                               SecurityAlertRepository securityAlertRepository,
                                JavaMailSender mailSender) {
         this.notificationRepository = notificationRepository;
         this.userRepository = userRepository;
@@ -101,7 +104,7 @@ public class NotificationService {
                 List<VaultItem> userItems = vaultItemRepository.findByUserIdOrderByUpdatedAtDesc(userId);
                 if (userItems != null) {
                     for (VaultItem item : userItems) {
-                        if (item.getPermissionLevel() != null && item.getPermissionLevel() != com.infosys.vault.model.PermissionLevel.FULL_MANAGEMENT) {
+                        if (item.getPermissionLevel() != null && item.getPermissionLevel() != PermissionLevel.FULL_MANAGEMENT) {
                             String title = "Credential Shared: " + item.getTitle();
                             String message = "A credential (" + item.getTitle() + ") has been securely shared with you with '" + item.getPermissionLevel().getLabel() + "' access level.";
                             createNotification(userId, "CREDENTIAL_SHARED", title, message);
@@ -111,10 +114,10 @@ public class NotificationService {
 
                 // 4. Populate Security Alerts if any exist in SecurityAlertRepository
                 if (securityAlertRepository != null) {
-                    List<com.infosys.vault.model.SecurityAlert> alerts = securityAlertRepository
+                    List<SecurityAlert> alerts = securityAlertRepository
                             .findByEmailIgnoreCaseOrEmailIgnoreCaseOrderByCreatedAtDesc(user.getEmail(), user.getUsername());
                     if (alerts != null && !alerts.isEmpty()) {
-                        for (com.infosys.vault.model.SecurityAlert sa : alerts) {
+                        for (SecurityAlert sa : alerts) {
                             if ("MULTIPLE_FAILED_LOGINS".equalsIgnoreCase(sa.getAlertType())) {
                                 createNotification(userId, "FAILED_LOGIN", "Security Alert: Multiple Failed Logins", sa.getMessage());
                                 createNotification(userId, "SUSPICIOUS_ACTIVITY", "Risk Alert: Suspicious Activity Detected", "Suspicious activity was detected on your SecureVault account (" + user.getEmail() + "). Please review your security logs.");

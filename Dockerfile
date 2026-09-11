@@ -29,7 +29,7 @@ USER appuser
 
 EXPOSE 8080
 
-# Configure JVM memory limits and GC settings
-ENV JAVA_OPTS="-Xms256m -Xmx512m -XX:+UseG1GC"
+# Configure JVM memory limits for Render containers (512MB RAM target)
+ENV JAVA_OPTS="-Xms128m -Xmx384m -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar app.jar"]
