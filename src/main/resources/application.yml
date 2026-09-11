@@ -38,7 +38,7 @@ spring:
     password: ${SPRING_DATASOURCE_PASSWORD:tiger}
 
   jpa:
-    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    open-in-view: false
     hibernate:
       ddl-auto: update
     show-sql: true
